@@ -5,20 +5,23 @@ module.exports = {
   COIN: '100000000',
   N: 100,
   MAX_TX_INPUTS: 500,
-  BLOCKCHAIN_PROVIDER_DEFAULT: 'sochain',
-  BLOCKCHAIN_PROVIDER_URL_DEFAULT: 'https://sochain.com/api/v2/',
+  BLOCKCHAIN_PROVIDER_DEFAULT: 'blockcypher',
+  BLOCKCHAIN_PROVIDER_URL_DEFAULT: 'https://api.blockcypher.com/v1',
   // the order of provider names matters in PROVIDERS and PROVIDER_URLS
   // the order needs to be the same
   PROVIDERS: {
-    SOCHAIN: 'sochain',
+    BLOCKCYPHER: 'blockcypher',
     MEMPOOLSPACE: 'mempoolspace',
-    BLOCKCHAINCOM: 'blockchaincom',
-    BLOCKCYPHER: 'blockcypher'
+    BLOCKCHAINCOM: 'blockchaincom'
   },
   PROVIDER_URLS: {
-    SOCHAIN: {
-      URL: 'https://sochain.com/api/v2',
-      SUPPORT: ['BTC', 'LTC', 'DOGE', 'BTCTEST', 'DOGETEST', 'LTCTEST']
+    BLOCKCYPHER: {
+      URL: 'https://api.blockcypher.com/v1',
+      SUPPORT: ['BTC', 'BTCTEST'],
+      EXTRA_URL: {
+        BTC: 'btc/main',
+        BTCTEST: 'btc/test3'
+      }
     },
     MEMPOOLSPACE: {
       URL: 'https://mempool.space',
@@ -27,14 +30,6 @@ module.exports = {
     BLOCKCHAINCOM: {
       URL: 'https://blockchain.info',
       SUPPORT: ['BTC']
-    },
-    BLOCKCYPHER: {
-      URL: 'https://api.blockcypher.com/v1',
-      SUPPORT: ['BTC', 'BTCTEST'],
-      EXTRA_URL: {
-        BTC: 'btc/main',
-        BTCTEST: 'btc/test3'
-      }
     }
   },
   NETWORKS: {

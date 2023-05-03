@@ -22,9 +22,7 @@ if (
   process.exit(0)
 }
 
-const sweep = new Sweeper(network, bip32, privkey2, toAddr, n, derivationPath, {
-  provider: 'blockcypher'
-})
+const sweep = new Sweeper(network, bip32, privkey2, toAddr, n, derivationPath)
 
 Sweep()
 

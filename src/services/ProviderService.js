@@ -21,19 +21,19 @@ const ProviderService = function (provider, network) {
 ProviderService.prototype.getTxHex = async function (txId) {
   try {
     switch (this.provider) {
-      case constants.PROVIDERS.SOCHAIN: {
+      case constants.PROVIDERS.BLOCKCYPHER: {
         const apiUrl = [
-          constants.PROVIDER_URLS.SOCHAIN.URL,
-          'get_tx',
-          this.network,
-          txId
+          constants.PROVIDER_URLS.BLOCKCYPHER.URL,
+          constants.PROVIDER_URLS.BLOCKCYPHER.EXTRA_URL[this.network],
+          `txs/${txId}`,
+          '?includeHex=true'
         ].join('/')
         const res = await fetchUrl(apiUrl)
         const json = await res.json()
-        if (json.status === 'fail') {
-          throw new Error(JSON.stringify(json.data))
+        if (res.status !== 200) {
+          throw new Error(json)
         }
-        return json.data.tx_hex
+        return json.hex
       }
       case constants.PROVIDERS.MEMPOOLSPACE: {
         const networkType =
@@ -66,20 +66,6 @@ ProviderService.prototype.getTxHex = async function (txId) {
         }
         return hex
       }
-      case constants.PROVIDERS.BLOCKCYPHER: {
-        const apiUrl = [
-          constants.PROVIDER_URLS.BLOCKCYPHER.URL,
-          constants.PROVIDER_URLS.BLOCKCYPHER.EXTRA_URL[this.network],
-          `txs/${txId}`,
-          '?includeHex=true'
-        ].join('/')
-        const res = await fetchUrl(apiUrl)
-        const json = await res.json()
-        if (res.status !== 200) {
-          throw new Error(json)
-        }
-        return json.hex
-      }
       default: {
         throw new Error('Could not get hex with provider: ' + this.provider)
       }
@@ -92,32 +78,6 @@ ProviderService.prototype.getTxHex = async function (txId) {
 ProviderService.prototype.getUtxo = async function (addr) {
   try {
     switch (this.provider) {
-      case constants.PROVIDERS.SOCHAIN: {
-        const apiUrl = [
-          constants.PROVIDER_URLS.SOCHAIN.URL,
-          'get_tx_unspent',
-          this.network,
-          addr
-        ].join('/')
-        const res = await fetchUrl(apiUrl)
-        const json = await res.json()
-        if (json.status === 'fail') {
-          throw new Error(JSON.stringify(json.data))
-        }
-        return json.data.txs
-      }
-      case constants.PROVIDERS.BLOCKCHAINCOM: {
-        const apiUrl = [
-          constants.PROVIDER_URLS.BLOCKCHAINCOM.URL,
-          'unspent?active=' + addr
-        ].join('/')
-        const res = await fetchUrl(apiUrl)
-        const json = await res.json()
-        if (json.error) {
-          throw new Error(json.message)
-        }
-        return json.unspent_outputs
-      }
       case constants.PROVIDERS.BLOCKCYPHER: {
         const apiUrl = [
           constants.PROVIDER_URLS.BLOCKCYPHER.URL,
@@ -139,6 +99,18 @@ ProviderService.prototype.getUtxo = async function (addr) {
           script_hex: tx.script
         }))
       }
+      case constants.PROVIDERS.BLOCKCHAINCOM: {
+        const apiUrl = [
+          constants.PROVIDER_URLS.BLOCKCHAINCOM.URL,
+          'unspent?active=' + addr
+        ].join('/')
+        const res = await fetchUrl(apiUrl)
+        const json = await res.json()
+        if (json.error) {
+          throw new Error(json.message)
+        }
+        return json.unspent_outputs
+      }
       default: {
         throw new Error('Could not get utxo with provider: ' + this.provider)
       }
@@ -151,15 +123,6 @@ ProviderService.prototype.getUtxo = async function (addr) {
 ProviderService.prototype.sendTx = async function (txHex) {
   try {
     switch (this.provider) {
-      case constants.PROVIDERS.SOCHAIN: {
-        const apiUrl = [
-          constants.PROVIDER_URLS.SOCHAIN.URL,
-          'send_tx',
-          this.network
-        ].join('/')
-        await broadcastTx(apiUrl, txHex)
-        return
-      }
       case constants.PROVIDERS.BLOCKCYPHER: {
         const apiUrl = [
           constants.PROVIDER_URLS.BLOCKCYPHER.URL,
