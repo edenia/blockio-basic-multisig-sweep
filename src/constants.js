@@ -5,19 +5,23 @@ module.exports = {
   COIN: '100000000',
   N: 100,
   MAX_TX_INPUTS: 500,
-  BLOCKCHAIN_PROVIDER_DEFAULT: 'sochain',
-  BLOCKCHAIN_PROVIDER_URL_DEFAULT: 'https://sochain.com/api/v2/',
+  BLOCKCHAIN_PROVIDER_DEFAULT: 'blockcypher',
+  BLOCKCHAIN_PROVIDER_URL_DEFAULT: 'https://api.blockcypher.com/v1',
   // the order of provider names matters in PROVIDERS and PROVIDER_URLS
   // the order needs to be the same
   PROVIDERS: {
-    SOCHAIN: 'sochain',
+    BLOCKCYPHER: 'blockcypher',
     MEMPOOLSPACE: 'mempoolspace',
     BLOCKCHAINCOM: 'blockchaincom'
   },
   PROVIDER_URLS: {
-    SOCHAIN: {
-      URL: 'https://sochain.com/api/v2',
-	SUPPORT: ['BTC', 'LTC', 'DOGE', 'BTCTEST', 'DOGETEST', 'LTCTEST']
+    BLOCKCYPHER: {
+      URL: 'https://api.blockcypher.com/v1',
+      SUPPORT: ['BTC', 'BTCTEST'],
+      EXTRA_URL: {
+        BTC: 'btc/main',
+        BTCTEST: 'btc/test3'
+      }
     },
     MEMPOOLSPACE: {
       URL: 'https://mempool.space',
@@ -53,12 +57,13 @@ module.exports = {
     DOGETEST: 1000000 // https://github.com/dogecoin/dogecoin/blob/v1.14.5/doc/fee-recommendation.md
   },
   NETWORK_FEE_MAX: {
-    BTC: (250 * 100000), // 0.25 BTC
-    BTCTEST: (250 * 100000), // 0.25 BTCTEST
-    LTC: (50 * 100000), // 0.05 LTC
-    LTCTEST: (50 * 100000), // 0.05 LTCTEST
-    DOGE: (2 * 100000000), // 2.00 DOGE
-    DOGETEST: (2 * 100000000) // 2.00 DOGETEST
+    BTC: 250 * 100000, // 0.25 BTC
+    BTCTEST: 250 * 100000, // 0.25 BTCTEST
+    LTC: 50 * 100000, // 0.05 LTC
+    LTCTEST: 50 * 100000, // 0.05 LTCTEST
+    DOGE: 2 * 100000000, // 2.00 DOGE
+    DOGETEST: 2 * 100000000 // 2.00 DOGETEST
   },
-  TX_BROADCAST_APPROVAL_TEXT: 'I have verified this transaction, and I want to broadcast it now'
+  TX_BROADCAST_APPROVAL_TEXT:
+    'I have verified this transaction, and I want to broadcast it now'
 }

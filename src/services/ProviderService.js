@@ -1,5 +1,8 @@
 const constants = require('../constants')
 const fetch = require('node-fetch')
+
+const { apiToken } = require('../config')
+
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 const ProviderService = function (provider, network) {
@@ -18,18 +21,30 @@ const ProviderService = function (provider, network) {
 ProviderService.prototype.getTxHex = async function (txId) {
   try {
     switch (this.provider) {
-      case constants.PROVIDERS.SOCHAIN: {
-        const apiUrl = [constants.PROVIDER_URLS.SOCHAIN.URL, 'get_tx', this.network, txId].join('/')
+      case constants.PROVIDERS.BLOCKCYPHER: {
+        const apiUrl = [
+          constants.PROVIDER_URLS.BLOCKCYPHER.URL,
+          constants.PROVIDER_URLS.BLOCKCYPHER.EXTRA_URL[this.network],
+          `txs/${txId}`,
+          '?includeHex=true'
+        ].join('/')
         const res = await fetchUrl(apiUrl)
         const json = await res.json()
-        if (json.status === 'fail') {
-          throw new Error(JSON.stringify(json.data))
+        if (res.status !== 200) {
+          throw new Error(json)
         }
-        return json.data.tx_hex
+        return json.hex
       }
       case constants.PROVIDERS.MEMPOOLSPACE: {
-        const networkType = this.network === constants.NETWORKS.BTC ? 'api' : 'testnet/api'
-        const apiUrl = [constants.PROVIDER_URLS.MEMPOOLSPACE.URL, networkType, 'tx', txId, 'hex'].join('/')
+        const networkType =
+          this.network === constants.NETWORKS.BTC ? 'api' : 'testnet/api'
+        const apiUrl = [
+          constants.PROVIDER_URLS.MEMPOOLSPACE.URL,
+          networkType,
+          'tx',
+          txId,
+          'hex'
+        ].join('/')
         const res = await fetchUrl(apiUrl)
         const hex = await res.text()
         if (res.status !== 200) {
@@ -38,7 +53,12 @@ ProviderService.prototype.getTxHex = async function (txId) {
         return hex
       }
       case constants.PROVIDERS.BLOCKCHAINCOM: {
-        const apiUrl = [constants.PROVIDER_URLS.BLOCKCHAINCOM.URL, 'rawtx', txId, '?format=hex'].join('/')
+        const apiUrl = [
+          constants.PROVIDER_URLS.BLOCKCHAINCOM.URL,
+          'rawtx',
+          txId,
+          '?format=hex'
+        ].join('/')
         const res = await fetchUrl(apiUrl)
         const hex = await res.text()
         if (res.status !== 200) {
@@ -58,17 +78,32 @@ ProviderService.prototype.getTxHex = async function (txId) {
 ProviderService.prototype.getUtxo = async function (addr) {
   try {
     switch (this.provider) {
-      case constants.PROVIDERS.SOCHAIN: {
-        const apiUrl = [constants.PROVIDER_URLS.SOCHAIN.URL, 'get_tx_unspent', this.network, addr].join('/')
+      case constants.PROVIDERS.BLOCKCYPHER: {
+        const apiUrl = [
+          constants.PROVIDER_URLS.BLOCKCYPHER.URL,
+          constants.PROVIDER_URLS.BLOCKCYPHER.EXTRA_URL[this.network],
+          `addrs/${addr}?includeScript=true&unspentOnly=true`
+        ].join('/')
         const res = await fetchUrl(apiUrl)
         const json = await res.json()
-        if (json.status === 'fail') {
-          throw new Error(JSON.stringify(json.data))
+        if (json.error) {
+          throw new Error(json.message)
         }
-        return json.data.txs
+
+        if (!json.txrefs) return []
+
+        return json.txrefs.map(tx => ({
+          txid: tx.tx_hash,
+          output_no: tx.tx_output_n,
+          value: tx.value,
+          script_hex: tx.script
+        }))
       }
       case constants.PROVIDERS.BLOCKCHAINCOM: {
-        const apiUrl = [constants.PROVIDER_URLS.BLOCKCHAINCOM.URL, 'unspent?active=' + addr].join('/')
+        const apiUrl = [
+          constants.PROVIDER_URLS.BLOCKCHAINCOM.URL,
+          'unspent?active=' + addr
+        ].join('/')
         const res = await fetchUrl(apiUrl)
         const json = await res.json()
         if (json.error) {
@@ -88,8 +123,12 @@ ProviderService.prototype.getUtxo = async function (addr) {
 ProviderService.prototype.sendTx = async function (txHex) {
   try {
     switch (this.provider) {
-      case constants.PROVIDERS.SOCHAIN: {
-        const apiUrl = [constants.PROVIDER_URLS.SOCHAIN.URL, 'send_tx', this.network].join('/')
+      case constants.PROVIDERS.BLOCKCYPHER: {
+        const apiUrl = [
+          constants.PROVIDER_URLS.BLOCKCYPHER.URL,
+          constants.PROVIDER_URLS.BLOCKCYPHER.EXTRA_URL[this.network],
+          `txs/push?token=${apiToken}`
+        ].join('/')
         await broadcastTx(apiUrl, txHex)
         return
       }
@@ -104,37 +143,35 @@ ProviderService.prototype.sendTx = async function (txHex) {
 
 module.exports = ProviderService
 
-async function fetchUrl (url) {
+async function fetchUrl(url) {
   try {
     let response = await fetch(url)
     if (response.ok) {
-      return response;
+      return response
     } else {
-      console.log(" -- retrying in 10 seconds due to status = " + response.status);
-      await delay(10000);
-      return await fetchUrl(url);
+      console.log(
+        ' -- retrying in 10 seconds due to status = ' + response.status
+      )
+      await delay(10000)
+      return await fetchUrl(url)
     }
   } catch (err) {
     throw new Error(err)
   }
 }
 
-async function broadcastTx (apiUrl, txHex) {
+async function broadcastTx(apiUrl, txHex) {
   try {
     let res = await fetch(apiUrl, {
       method: 'POST',
-      body: JSON.stringify({ tx_hex: txHex }),
+      body: JSON.stringify({ tx: txHex }),
       headers: { 'Content-Type': 'application/json' }
     })
     res = await res.json()
-    if (res.status === 'success') {
-      console.log('Sweep Success!')
-      console.log('Tx_id:', res.data.txid)
-    } else {
-      console.log('Sweep Failed:')
-      throw new Error(JSON.stringify(res.data))
-    }
+    console.log('Sweep Success!')
+    console.log(res)
   } catch (err) {
+    console.log('Sweep Failed:')
     throw new Error(err)
   }
 }
