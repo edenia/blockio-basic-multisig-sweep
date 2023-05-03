@@ -12,7 +12,8 @@ module.exports = {
   PROVIDERS: {
     SOCHAIN: 'sochain',
     MEMPOOLSPACE: 'mempoolspace',
-    BLOCKCHAINCOM: 'blockchaincom'
+    BLOCKCHAINCOM: 'blockchaincom',
+    BLOCKCYPHER: 'blockcypher'
   },
   PROVIDER_URLS: {
     SOCHAIN: {
@@ -26,6 +27,14 @@ module.exports = {
     BLOCKCHAINCOM: {
       URL: 'https://blockchain.info',
       SUPPORT: ['BTC']
+    },
+    BLOCKCYPHER: {
+      URL: 'https://api.blockcypher.com/v1',
+      SUPPORT: ['BTC', 'BTCTEST'],
+      EXTRA_URL: {
+        BTC: 'btc/main',
+        BTCTEST: 'btc/test3'
+      }
     }
   },
   NETWORKS: {

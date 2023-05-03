@@ -128,7 +128,9 @@ BlockIoSweep.prototype.begin = async function () {
 
       for (let i = 0; i < utxoMap[address].tx.length; i++) {
         const utxo = utxoMap[address].tx[i]
-        balToSweep += getCoinValue(utxo.value)
+        balToSweep += Number.isInteger(utxo.value)
+          ? utxo.value
+          : getCoinValue(utxo.value)
         delete utxo.value
         const input = {
           ...utxo
@@ -391,21 +393,21 @@ async function addAddrToMap(
     // get the unspent transactions for the derived address
     const addrUtxo = await providerService.getUtxo(payment.address)
 
-    let x
-
-    for (x of addrUtxo) {
+    for (const output of addrUtxo) {
       const unspentObj = {}
-      unspentObj.hash = x.txid
-      unspentObj.index = x.output_no
-      unspentObj.value = x.value
+      unspentObj.hash = output.txid
+      unspentObj.index = output.output_no
+      unspentObj.value = output.value
 
       switch (addrType) {
         // handle different scripts for different address types here
 
         case constants.P2WSH_P2SH: // P2WSH-over-P2SH
           unspentObj.witnessUtxo = {
-            script: Buffer.from(x.script_hex, 'hex'),
-            value: getCoinValue(x.value)
+            script: Buffer.from(output.script_hex, 'hex'),
+            value: Number.isInteger(output.value)
+              ? output.value
+              : getCoinValue(output.value)
           }
           unspentObj.redeemScript = payment.redeem.output
           unspentObj.witnessScript = payment.redeem.redeem.output
@@ -413,15 +415,17 @@ async function addAddrToMap(
 
         case constants.P2WSH: // Native Segwit (v0) or Witness v0
           unspentObj.witnessUtxo = {
-            script: Buffer.from(x.script_hex, 'hex'),
-            value: getCoinValue(x.value)
+            script: Buffer.from(output.script_hex, 'hex'),
+            value: Number.isInteger(output.value)
+              ? output.value
+              : getCoinValue(output.value)
           }
           unspentObj.witnessScript = payment.redeem.output
           break
 
         case constants.P2SH: // Legacy P2SH
           unspentObj.nonWitnessUtxo = Buffer.from(
-            await providerService.getTxHex(x.txid),
+            await providerService.getTxHex(output.txid),
             'hex'
           )
           unspentObj.redeemScript = payment.redeem.output
